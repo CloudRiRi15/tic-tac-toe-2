@@ -1,4 +1,4 @@
-name: Build,Analyze,scan
+name: Build,Analyze,Scan
 on:
   push:
     branches:
@@ -11,32 +11,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0  # Ensures full repo history for better analysis
+
       - name: Build and analyze with SonarQube
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          
-      - name: npm install dependency
+
+      - name: Install dependencies
         run: npm install
 
       - name: Trivy file scan
         run: trivy fs . > trivyfs.txt
 
-      - name: Docker Build and push
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Docker Login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Docker Build and Push
         run: |
-          docker build -t tic-tac-toe-2 .
-          docker tag tic-tac-toe-2 cloudriri/tic-tac-toe-2
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker buildx build --platform linux/amd64 -t cloudriri/tic-tac-toe-2 .
+          docker tag cloudriri/tic-tac-toe-2 cloudriri/tic-tac-toe-2:latest
           docker push cloudriri/tic-tac-toe-2:latest
-        env:
-          DOCKER_CLI_ACI: 1
-        
-        
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # - uses: sonarsource/sonarqube-quality-gate-action@master
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
