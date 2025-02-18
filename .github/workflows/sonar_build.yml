@@ -23,6 +23,16 @@ jobs:
 
       - name: Trivy file scan
         run: trivy fs . > trivyfs.txt
+
+      - name: Docker Build and push
+        run: |
+          docker build -t tic-tac-toe-2 .
+          docker tag tic-tac-toe-2 cloudriri/tic-tac-toe-2
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push cloudriri/tic-tac-toe-2:latest
+        env:
+          DOCKER_CLI_ACI: 1
+        
         
       # If you wish to fail your job when the Quality Gate is red, uncomment the
       # following lines. This would typically be used to fail a deployment.
