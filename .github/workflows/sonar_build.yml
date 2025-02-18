@@ -33,6 +33,6 @@ jobs:
 
       - name: Docker Build and Push
         run: |
-          docker buildx build --platform linux/amd64 -t cloudriri15/tic-tac-toe-2 .
-          docker tag cloudriri15/tic-tac-toe-2 cloudriri15/tic-tac-toe-2:latest
-          docker push cloudriri15/tic-tac-toe-2:latest
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker buildx build --platform linux/amd64 -t cloudriri/tic-tac-toe-2 --push .
+
