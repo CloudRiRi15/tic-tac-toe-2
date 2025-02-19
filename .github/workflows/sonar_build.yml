@@ -29,10 +29,14 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Docker Login
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin   
 
       - name: Docker Build and Push
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
           docker buildx build --platform linux/amd64 -t cloudriri15/tic-tac-toe-2 --push .
+
+      - name: Image scan
+        run: trivy image cloudriri15/tic-tac-toe-2:latest > trivyimage.txt    
+        
 
