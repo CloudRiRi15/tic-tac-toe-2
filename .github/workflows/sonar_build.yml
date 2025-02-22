@@ -37,6 +37,22 @@ jobs:
           docker buildx build --platform linux/amd64 -t cloudriri15/tic-tac-toe-2 --push .
 
       - name: Image scan
-        run: trivy image cloudriri15/tic-tac-toe-2:latest > trivyimage.txt    
+        run: trivy image cloudriri15/tic-tac-toe-2:latest > trivyimage.txt   
+         
+  deploy:
+   needs: build-analyze-scan
+   runs-on: [self-hosted]
+   steps:
+     - name: docker pull image
+       run: docker pull cloudriri15/tic-tac-toe-2:latest
+
+     - name: Image Scan
+       run: trivy image cloudriri15/tic-tac-toe-2:latest > trivyimagedeploy.txt 
+
+     - name: Deploy to container 
+       run: docker run -d --name game -p 3000:3000 cloudriri15/tic-tac-toe-2:latest  
+
+     
+     
         
 
