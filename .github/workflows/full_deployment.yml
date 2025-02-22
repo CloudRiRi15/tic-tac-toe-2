@@ -1,8 +1,10 @@
-name: Build,Analyze,Scan
+name: Build, Analyze, Scan
+
 on:
   push:
     branches:
       - main
+
 jobs:
   build-analyze-scan:
     name: Build
@@ -13,26 +15,23 @@ jobs:
         with:
           fetch-depth: 0  # Ensures full repo history for better analysis
 
-      - name: Deploy to container 
-        run: 
-         docker stop game
-         docker rm game
-       
+      - name: Stop and remove existing container (if exists)
+        run: |
+          docker ps -q --filter "name=game" | grep -q . && docker stop game && docker rm game || echo "No existing container to remove"
+
       - name: Update kubeconfig
         run: aws eks --region af-south-1 update-kubeconfig --name EKS_CLOUD
 
-      - name: Deploy to Kubernetes
-        run: kubectl delete -f deployment-service.yml 
-      
+      - name: Remove Kubernetes Deployment (if exists)
+        run: |
+          kubectl get -f deployment-service.yml && kubectl delete -f deployment-service.yml || echo "Deployment not found, skipping delete"
+
       - name: Send a Slack Notification
         if: always()
         uses: act10ns/slack@v1
         with:
-         status: ${{ job.status }}
-         steps: ${{ toJson(steps) }}
-         channel: '#githubactions-and-kubernetes'
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+          channel: '#githubactions-and-kubernetes'
         env:
-         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} 
-     
-    #workflow to remove container and EKs cluster
-
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
